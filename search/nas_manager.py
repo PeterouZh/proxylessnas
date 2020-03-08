@@ -388,7 +388,8 @@ class ArchSearchRunManager:
                     # unused modules back
                     self.net.unused_modules_back()
                 # skip architecture parameter updates in the first epoch
-                if epoch > 0:
+                # if epoch > 0:
+                if epoch >= 0:
                     # update architecture parameters according to update_schedule
                     for j in range(update_schedule.get(i, 0)):
                         start_time = time.time()

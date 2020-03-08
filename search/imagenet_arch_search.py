@@ -100,14 +100,14 @@ parser.add_argument('--rl_baseline_decay_weight', type=float, default=0.99)
 parser.add_argument('--rl_tradeoff_ratio', type=float, default=0.1)
 
 
-if __name__ == '__main__':
-    args = parser.parse_args()
+def main(args, myargs):
+    # args = parser.parse_args()
 
     torch.manual_seed(args.manual_seed)
     torch.cuda.manual_seed_all(args.manual_seed)
     np.random.seed(args.manual_seed)
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    # os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     os.makedirs(args.path, exist_ok=True)
 
@@ -207,3 +207,25 @@ if __name__ == '__main__':
 
     # joint training
     arch_search_run_manager.train(fix_net_weights=args.debug)
+
+def run(argv_str=None):
+  from template_lib.utils.config import parse_args_and_setup_myargs, config2args
+  from template_lib.utils.modelarts_utils import prepare_dataset
+  run_script = os.path.relpath(__file__, os.getcwd())
+  args1, myargs, _ = parse_args_and_setup_myargs(argv_str, run_script=run_script, start_tb=False)
+  myargs.args = args1
+  myargs.config = getattr(myargs.config, args1.command)
+
+  if hasattr(myargs.config, 'datasets'):
+    prepare_dataset(myargs.config.datasets, cfg=myargs.config)
+
+  args = parser.parse_args([])
+  args = config2args(myargs.config.args, args)
+
+  args.path = os.path.join(myargs.args.outdir, args.path)
+  main(args, myargs)
+
+if __name__ == '__main__':
+  run()
+  from template_lib.examples import test_bash
+  test_bash.TestingUnit().test_resnet(gpu=os.environ['CUDA_VISIBLE_DEVICES'])
